@@ -40,11 +40,11 @@ def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no)
 
     #Send the email message to the recipient email id and capture the email sent time or capture error message if any
     try:
-        context = ssl.create_default_context()
-        with smtplib.SMTP(smtp_server, port) as server:
-            server.starttls(context=context)
-            server.login(sender_email, app_password)
-            server.send_message(msg)
+        # context = ssl.create_default_context()
+        # with smtplib.SMTP(smtp_server, port) as server:
+        #     server.starttls(context=context)
+        #     server.login(sender_email, app_password)
+        #     server.send_message(msg)
         
         log_msg = f"Sent email at slno {serial_no} at time: " + datetime.datetime.now().strftime("%d/%m/%Y,%H:%M:%S")
         return log_msg
@@ -56,43 +56,48 @@ def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no)
     
 
 @sendEmail_bp.route('/startCampaign',methods=['GET','POST'])
-async def startCampaign():
+def startCampaign():
         if request.method == 'POST':
-            fileName = request.form['filename']
+            fileName = request.form.get('filenames')
             startRow = int(request.form['startrow'])
             endRow = int(request.form['endrow'])
             return render_template('campaignStarted.html',filename=fileName,startrow=startRow,endrow=endRow)
 
-        return render_template('campaignForm.html')
+        file_directory = os.path.join(bas_dir,'files','excel')
+
+        filenames = os.listdir(file_directory)
+        return render_template('campaignForm.html',fileNames=filenames)
 
 @sendEmail_bp.route('/stream')
 def stream():
         
-        def generate():
-            #Collect all the arguments passed by the client html
-            filename = request.args.get('fileName')
-            startrow = int(request.args.get('startRow'))
-            endrow = int(request.args.get('endRow'))
+        #Collect all the arguments passed by the client html
+        filename = request.args.get('fileName')
+        startrow = int(request.args.get('startRow'))
+        endrow = int(request.args.get('endRow'))
                     
-            #Configure Directory Paths
-            input_excel_path = os.path.join(bas_dir,'files','excel')
-            hmtl_file_path = os.path.join(bas_dir,'files','html')
-            excel_file_name = filename
+        #Configure Directory Paths
+        input_excel_path = os.path.join(bas_dir,'files','excel')
+        hmtl_file_path = os.path.join(bas_dir,'files','html')
+        excel_file_name = filename
 
-            #Load the input excel file
-            filename = os.path.join(input_excel_path,excel_file_name)
-            workbook = openpyxl.load_workbook(filename)
-            sheet = workbook['Sheet1']
+        #Load the input excel file
+        filename = os.path.join(input_excel_path,excel_file_name)
+        workbook = openpyxl.load_workbook(filename)
+        sheet = workbook['Sheet1']
 
-            #From the input excel file extract the campaign name, the email html file name and subject line
-            campaign_name = sheet['B1'].value
-            html_file_name = sheet['B2'].value
-            email_html_file = os.path.join(hmtl_file_path,html_file_name)
-            subject_line = sheet['B3'].value
+        #From the input excel file extract the campaign name, the email html file name and subject line
+        campaign_name = sheet['B1'].value
+        html_file_name = sheet['B2'].value
+        email_html_file = os.path.join(hmtl_file_path,html_file_name)
+        subject_line = sheet['B3'].value
 
-            #Create an entry for email campaign in database
-            campaign_id = createCampaigns(campaign_name,excel_file_name,html_file_name)
-    
+        #Create an entry for email campaign in database
+        campaign_id = createCampaigns(campaign_name,excel_file_name,html_file_name)
+
+          
+        def generate():
+           
             try:
                 for row_cells in sheet.iter_rows(min_row=startrow,max_row=endrow):
                     serial_no = row_cells[2].value
@@ -107,9 +112,9 @@ def stream():
                     
             finally:
                 #This block executes code when the for loop in generate function ends
-                #Send a close event to client to close the streaming
+                #Send a close event to client to close the streaming. Also add a message to inform user that email sending is complete
                 updateCampaignStatus(campaign_id)
-                yield f"event: close\ndata: Connection finished\n\n"
+                yield f"event: close\ndata: Email sending is complete\n\n"
         
         return Response(stream_with_context(generate()), content_type='text/event-stream')
         workbook.close()
