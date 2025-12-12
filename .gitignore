@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+bin/
+include/
+lib/
+lib64/
+share/
+*.egg-info/
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.vscode/
+.idea/
+
+# Editor/IDE specific
+*.swp
+*.bak
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# FastAPI specific
+.env
+.env.*
+logs/
+*.log
+tmp/
+*.sqlite3
+*.db
+
+# Files folder for uploading data files
+/files/
