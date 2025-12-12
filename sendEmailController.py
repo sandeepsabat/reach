@@ -40,11 +40,11 @@ def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no)
 
     #Send the email message to the recipient email id and capture the email sent time or capture error message if any
     try:
-        # context = ssl.create_default_context()
-        # with smtplib.SMTP(smtp_server, port) as server:
-        #     server.starttls(context=context)
-        #     server.login(sender_email, app_password)
-        #     server.send_message(msg)
+        context = ssl.create_default_context()
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.starttls(context=context)
+            server.login(sender_email, app_password)
+            server.send_message(msg)
         
         log_msg = f"Sent email at slno {serial_no} at time: " + datetime.datetime.now().strftime("%d/%m/%Y,%H:%M:%S")
         return log_msg
