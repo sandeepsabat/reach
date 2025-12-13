@@ -55,6 +55,9 @@ def create_app():
     
     from sendEmailController import sendEmail_bp
     app.register_blueprint(sendEmail_bp,url_prefix='/run')
+
+    from campaignTrackingController import campaignTracker_bp
+    app.register_blueprint(campaignTracker_bp,url_prefix='/track')
     
 
     return app
