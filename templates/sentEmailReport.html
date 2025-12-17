@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Report</title>
+</head>
+<body>
+    <h1>Sent Email Report</h1>
+    <h2>Select a Campaign</h2>
+    <p><a href="{{url_for('index')}}"> Back to Home</a></p>
+    
+    <form id="sentEmailReportForm">
+        <label for="campaignnames">Campaign Name:</label>
+        <select id="campaignnames" name="campaignnames">
+            {% for name in campaignnames %}
+                <option value="{{name}}">{{name}}</option>
+            {% endfor %}
+        </select><br><br>
+              
+        <button type="submit">View</button>
+    </form>
+    <h2>Emails Sent In Campaign</h2>
+    <div id="reportIntro"></div>
+    <div id="resultsTable">
+
+    </div>
+
+    <script>
+        //Create a function to that can take a JSON array as input and return it as a table elemenet
+        function jsonArrayToTable(jsonArray) {
+            if (!Array.isArray(jsonArray) || jsonArray.length === 0) {
+                console.error("Input is not a non-empty array.");
+                return null;
+                }
+
+            // Create the table element
+            const table = document.createElement('table');
+            // Optional: Add some basic styling or class
+            table.setAttribute('border', '1');
+            table.setAttribute('cellpadding', '5');
+
+            // Create the table header row
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const headers = Object.keys(jsonArray[0]); // Get keys from the first object
+
+            headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create the table body rows
+            const tbody = document.createElement('tbody');
+            jsonArray.forEach(item => {
+                const row = document.createElement('tr');
+                headers.forEach(header => {
+                const cell = document.createElement('td');
+                cell.textContent = item[header];
+                row.appendChild(cell);
+                });
+            tbody.appendChild(row);
+            });
+            table.appendChild(tbody);
+
+            return table;
+        }
+
+        async function fetchAndDisplayData(){
+
+            document.getElementById('sentEmailReportForm').addEventListener('submit',async function(event){
+            //Prevent the default form submission(stops the page reload)
+            event.preventDefault();
+
+            //Get the data from the input field
+            const userInput= document.getElementById('campaignnames').value;
+            const resultsTable = document.getElementById('resultsTable');
+            const reportIntro = document.getElementById('reportIntro');
+
+            //Send the data to the server using the get API
+            const url_endpoint = "{{url_for('campaigntracker.getEmailListForCampaign')}}";
+            const response = await fetch(url_endpoint,{
+                method:'POST',
+                headers:{
+                    'content-type':'application/json',
+                },
+                body: JSON.stringify({'data':userInput}),
+
+            });
+
+            const resultData = await response.json();
+            const resultDataString = resultData["message"];
+            const resultDataJSON = JSON.parse(resultDataString);
+            const recordCount = resultDataJSON.length;
+            reportIntro.innerHTML = `<h3><pre>Campaign Name:${userInput}    No Of Emails Sent: ${recordCount}</pre></h3>`;
+
+            //Convert JSON Array to a table element
+            const tableElement = jsonArrayToTable(resultDataJSON);
+
+            //Append the generated table to the container in HTML document
+            if (tableElement) {
+                resultsTable.appendChild(tableElement);
+                }
+                 
+        }
+
+           
+        )}
+    fetchAndDisplayData();
+        
+    </script>
+    
+    
+</body>
+</html>

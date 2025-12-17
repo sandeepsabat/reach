@@ -22,6 +22,21 @@ def addEmailOpenEntryForCampaign(campaignName):
     collection2 = db['campaign-email-open-tracker']
     collection2.insert_one(data_record)
 
+def getSentEmailsForCampaign(campaignName):
+    db = client['reach']
+    collection = db['campaign-emails']
+    filter_query = {"campaignName":campaignName}
+    projection = {"_id":0,"firstName":1,"lastName":1,"emailId":1,"logMessage":1}
+    sentEmailList = list(collection.find(filter_query,projection))
+    return sentEmailList
+
+def getCampaignNameList():
+    db = client['reach']
+    collection = db['campaigns']
+    campaignNameList = list(collection.distinct("name"))
+    return campaignNameList
+    
+
 
 
 

@@ -3,7 +3,9 @@ import datetime
 import os
 import openpyxl
 from sendEmailDao import createCampaigns
-from trackCampaignDao import addTrackableLinkToCampaign,addEmailOpenEntryForCampaign
+from trackCampaignDao import addTrackableLinkToCampaign,addEmailOpenEntryForCampaign,getSentEmailsForCampaign,getCampaignNameList
+from bson import json_util
+import json
 
 
 campaignTracker_bp = Blueprint("campaigntracker",__name__)
@@ -48,3 +50,17 @@ def trackCampaign():
     campaignName = request.args.get('name')
     addEmailOpenEntryForCampaign(campaignName)
     return '',204
+
+@campaignTracker_bp.route('/getEmailListForCampaign',methods=['GET','POST'])
+def getEmailListForCampaign():
+    campaignNameList = getCampaignNameList()
+
+    if request.method == 'POST':
+        inputData = request.get_json()
+        campaignName = inputData['data']
+        sentEmailList = getSentEmailsForCampaign(campaignName)
+        sentEmailList_json = json_util.dumps(sentEmailList)
+        return jsonify({'message':sentEmailList_json})
+    
+    return render_template('sentEmailReport.html',campaignnames=campaignNameList)
+    
