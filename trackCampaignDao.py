@@ -35,6 +35,107 @@ def getCampaignNameList():
     collection = db['campaigns']
     campaignNameList = list(collection.distinct("name"))
     return campaignNameList
+
+def getCampaignsEmailStats():
+    db = client['reach']
+    collection = db['campaigns']
+
+   
+
+    pipeline = [
+                {
+                    "$lookup":{
+                        "from": "campaign-emails",
+                        "localField": "_id",
+                        "foreignField": "campaignOid",
+                        "as": "emailList"
+                    }
+                },
+                {
+                    "$unwind":{
+                        "path": "$emailList"
+                    }
+                },
+                {
+                    "$sort":{
+                        "_id":-1
+                    }
+                },
+                {
+                    "$group":{
+                        "_id": "$emailList.campaignName",
+                       
+                        "emailCount": {
+                        "$sum": 1
+                        }
+                    }
+                },
+                {
+                    "$project":{
+                        "_id": 0,
+                        "campaignName": "$_id",
+                        "emailCount": "$emailCount"
+                    }
+                }
+                ]
+
+    campaignEmailStat =  collection.aggregate(pipeline)
+    
+    campaignEmailStatList = list(campaignEmailStat)
+    return campaignEmailStatList
+
+
+def getDatewiseEmailStats():
+    db = client['reach']
+    collection = db['campaigns']
+
+   
+
+    pipeline = [
+                {
+                    "$lookup":{
+                        "from": "campaign-emails",
+                        "localField": "_id",
+                        "foreignField": "campaignOid",
+                        "as": "emailList"
+                    }
+                },
+                {
+                    "$unwind":{
+                        "path": "$emailList"
+                    }
+                },
+                {
+                    "$sort":{
+                        "_id":-1
+                    }
+                },
+                {
+                    "$group":{
+                        "_id": {
+                            "$dateToString":{
+                                "format":"%Y-%m-%d",
+                                "date":"$campaignRunDateTime"}
+                            },
+                       
+                        "emailCount": {
+                        "$sum": 1
+                        }
+                    }
+                },
+                {
+                    "$project":{
+                        "_id": 0,
+                        "runDate": "$_id",
+                        "emailCount": "$emailCount"
+                    }
+                }
+                ]
+
+    datewiseEmailStat =  collection.aggregate(pipeline)
+    
+    datewiseEmailStatList = list(datewiseEmailStat)
+    return datewiseEmailStatList
     
 
 

@@ -1,0 +1,12 @@
+<html>
+<head>
+    <title>Charts</title>
+</head>
+<body>
+    <h1>Sent Email By Campaign</h1>
+    <p><a href="{{url_for('index')}}"> Back to Home</a></p>
+    <!-- Embed the Base64 encoded image string in the src attribute -->
+    <img src="data:image/png;base64, {{ plot1_url }}" alt="Bar Graph">
+    <img src="data:image/png;base64, {{ plot2_url }}" alt="Bar Graph">
+</body>
+</html>

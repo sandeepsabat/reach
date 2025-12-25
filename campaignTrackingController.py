@@ -3,9 +3,16 @@ import datetime
 import os
 import openpyxl
 from sendEmailDao import createCampaigns
-from trackCampaignDao import addTrackableLinkToCampaign,addEmailOpenEntryForCampaign,getSentEmailsForCampaign,getCampaignNameList
+from trackCampaignDao import addTrackableLinkToCampaign,addEmailOpenEntryForCampaign,getSentEmailsForCampaign,getCampaignNameList,getCampaignsEmailStats,getDatewiseEmailStats
 from bson import json_util
+import operator
 import json
+import base64
+import matplotlib
+import matplotlib.pyplot as plt
+import io
+from textwrap import wrap
+
 
 
 campaignTracker_bp = Blueprint("campaigntracker",__name__)
@@ -63,4 +70,45 @@ def getEmailListForCampaign():
         return jsonify({'message':sentEmailList_json})
     
     return render_template('sentEmailReport.html',campaignnames=campaignNameList)
+
+#Define a function for returning an plot image by taking x and y values
+
+def getPlotImage(x_values,y_values,xlabel,ylabel,title):
+    #Create the plot
+    fig,ax = plt.subplots(figsize=(10,6)) # specifiy the size of the plot
+    bar_var = ax.bar(x_values,y_values,color=['red', 'yellow', 'orange', 'purple','green','blue']) #Assign the bar plot to a variable
+    ax.bar_label(bar_var,label_type='edge') #Add labels to rge bar, 'edge' places labels on top
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+
+    # Wrap labels to a specified width (e.g., 10 characters)
+    wrapped_labels = ['\n'.join(wrap(l, 20)) for l in x_values]
+    ax.set_xticklabels(wrapped_labels) #
+
+    #Save plot to a BytesIO object (in memory file)
+    img_data = io.BytesIO()
+    plt.savefig(img_data,format='png',bbox_inches='tight')
+    plt.close(fig) # close the figure to free memory
+
+    #Encode the image as Base64 for embedding into HTML
+    img_data.seek(0)
+    img_base64 = base64.b64encode(img_data.getvalue()).decode('utf8')
+    return img_base64
+
     
+@campaignTracker_bp.route('/campaignsEmailStats',methods=['GET'])
+def campaignEmailStats():
+    campaignList = getCampaignsEmailStats()
+    plt1_x_values = list(map(operator.itemgetter('campaignName'),campaignList))
+    plt1_y_values = list(map(operator.itemgetter('emailCount'),campaignList))
+    plt1_img = getPlotImage(plt1_x_values,plt1_y_values,'Campaigns','Sent Email Count','Email Sent By Campaigns')
+
+    
+    datewiseList = getDatewiseEmailStats()
+    plt2_x_values = list(map(operator.itemgetter('runDate'),datewiseList))
+    plt2_y_values = list(map(operator.itemgetter('emailCount'),datewiseList))
+    plt2_img = getPlotImage(plt2_x_values,plt2_y_values,'Campaign Run Date','Sent Email Count','Email Sent By Date')
+    
+    
+    return render_template('campaignEmailGraph.html',plot1_url=plt1_img,plot2_url=plt2_img)
