@@ -168,7 +168,6 @@ def bounceStream():
                     serial_no = row_cells[2].value
                     recipient_email = row_cells[5].value
                     bounce_status = row_cells[8].value
-                    print("Bounce Status:",bounce_status)
                     log_msg = f"Updated bounce status of email at slno {serial_no}"
                     workbook.save(filename)
                     updateEmailBounceStatus(campaign_name,campaign_id,recipient_email,bounce_status)
