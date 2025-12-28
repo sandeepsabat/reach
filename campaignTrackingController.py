@@ -9,6 +9,9 @@ import operator
 import json
 import base64
 import matplotlib
+matplotlib.use('Agg')# Use the Agg backend for non-interactive image generation
+#Using the above line of code suppresses the warning "UserWarning: Starting a Matplotlib GUI outside of the main thread will likely fail."
+#Using the above line of code however will prevent from plt.show() to work if it is required
 import matplotlib.pyplot as plt
 import io
 from textwrap import wrap
@@ -72,8 +75,7 @@ def getEmailListForCampaign():
     return render_template('sentEmailReport.html',campaignnames=campaignNameList)
 
 #Define a function for returning an plot image by taking x and y values
-
-def getPlotImage(x_values,y_values,xlabel,ylabel,title):
+def getBarGraphPlotImage(x_values,y_values,xlabel,ylabel,title):
     #Create the plot
     fig,ax = plt.subplots(figsize=(10,6)) # specifiy the size of the plot
     bar_var = ax.bar(x_values,y_values,color=['red', 'yellow', 'orange', 'purple','green','blue']) #Assign the bar plot to a variable
@@ -83,8 +85,10 @@ def getPlotImage(x_values,y_values,xlabel,ylabel,title):
     ax.set_title(title)
 
     # Wrap labels to a specified width (e.g., 10 characters)
-    wrapped_labels = ['\n'.join(wrap(l, 20)) for l in x_values]
-    ax.set_xticklabels(wrapped_labels) #
+    # ax.set_xticks(x_values) # Adding this line suppresses warning "UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator."
+    # wrapped_labels = ['\n'.join(wrap(l, 10)) for l in x_values] #This line wraps the labels
+    # ax.set_xticklabels(wrapped_labels) #This line adds the wrapped labels in X-axis
+    ax.tick_params(axis='x',labelrotation=45)#Rotates the x-axis label by 45%
 
     #Save plot to a BytesIO object (in memory file)
     img_data = io.BytesIO()
@@ -96,19 +100,20 @@ def getPlotImage(x_values,y_values,xlabel,ylabel,title):
     img_base64 = base64.b64encode(img_data.getvalue()).decode('utf8')
     return img_base64
 
-    
+#Create a page to render all the charts related to campaign
 @campaignTracker_bp.route('/campaignsEmailStats',methods=['GET'])
 def campaignEmailStats():
+    #Create bar graph plot for 'Email Sent by Campaigns'
     campaignList = getCampaignsEmailStats()
     plt1_x_values = list(map(operator.itemgetter('campaignName'),campaignList))
     plt1_y_values = list(map(operator.itemgetter('emailCount'),campaignList))
-    plt1_img = getPlotImage(plt1_x_values,plt1_y_values,'Campaigns','Sent Email Count','Email Sent By Campaigns')
+    plt1_img = getBarGraphPlotImage(plt1_x_values,plt1_y_values,'Campaigns','Sent Email Count','Email Sent By Campaigns')
 
-    
+    #Create bar graph plot for 'Email sent by Date'
     datewiseList = getDatewiseEmailStats()
     plt2_x_values = list(map(operator.itemgetter('runDate'),datewiseList))
     plt2_y_values = list(map(operator.itemgetter('emailCount'),datewiseList))
-    plt2_img = getPlotImage(plt2_x_values,plt2_y_values,'Campaign Run Date','Sent Email Count','Email Sent By Date')
+    plt2_img = getBarGraphPlotImage(plt2_x_values,plt2_y_values,'Campaign Run Date','Sent Email Count','Email Sent By Date')
     
     
     return render_template('campaignEmailGraph.html',plot1_url=plt1_img,plot2_url=plt2_img)
