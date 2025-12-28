@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 import openpyxl
 import datetime
 import os
-from sendEmailDao import createCampaigns,addEmailToCampaign,updateCampaignStatus
+from sendEmailDao import createCampaigns,addEmailToCampaign,updateCampaignStatus,updateEmailBounceStatus
 
 sendEmail_bp = Blueprint("sendemail",__name__)
 
@@ -120,6 +120,66 @@ def stream():
         workbook.close()
 
             
-            
+@sendEmail_bp.route('/uploadEmailBounce',methods=['GET','POST'])
+def uploadEmailBounce():
+        if request.method == 'POST':
+            fileName = request.form.get('filenames')
+            startRow = int(request.form['startrow'])
+            endRow = int(request.form['endrow'])
+            return render_template('emailBounceUpdateStarted.html',filename=fileName,startrow=startRow,endrow=endRow)
+
+        file_directory = os.path.join(bas_dir,'files','excel')
+
+        filenames = os.listdir(file_directory)
+        return render_template('emailBounceForm.html',fileNames=filenames)    
+
+
+@sendEmail_bp.route('/bounceStream')
+def bounceStream():
+        
+        #Collect all the arguments passed by the client html
+        filename = request.args.get('fileName')
+        startrow = int(request.args.get('startRow'))
+        endrow = int(request.args.get('endRow'))
+                    
+        #Configure Directory Paths
+        input_excel_path = os.path.join(bas_dir,'files','excel')
+        hmtl_file_path = os.path.join(bas_dir,'files','html')
+        excel_file_name = filename
+
+        #Load the input excel file
+        filename = os.path.join(input_excel_path,excel_file_name)
+        workbook = openpyxl.load_workbook(filename,data_only=True)
+        sheet = workbook['Sheet1']
+
+        #From the input excel file extract the campaign name, the email html file name
+        campaign_name = sheet['B1'].value
+        html_file_name = sheet['B2'].value
+        
+
+        #Create an entry for email campaign in database
+        campaign_id = createCampaigns(campaign_name,excel_file_name,html_file_name)
+
+          
+        def generate():
+           
+            try:
+                for row_cells in sheet.iter_rows(min_row=startrow,max_row=endrow):
+                    serial_no = row_cells[2].value
+                    recipient_email = row_cells[5].value
+                    bounce_status = row_cells[8].value
+                    print("Bounce Status:",bounce_status)
+                    log_msg = f"Updated bounce status of email at slno {serial_no}"
+                    workbook.save(filename)
+                    updateEmailBounceStatus(campaign_name,campaign_id,recipient_email,bounce_status)
+                    yield f"data: {log_msg}\n\n" #Sends message to the client html as server side events
+                    
+            finally:
+                #This block executes code when the for loop in generate function ends
+                #Send a close event to client to close the streaming. Also add a message to inform user that email sending is complete
+                yield f"event: close\ndata: Email bounce status update complete\n\n"
+        
+        return Response(stream_with_context(generate()), content_type='text/event-stream')
+        workbook.close()
             
         

@@ -41,3 +41,9 @@ def getCampaignStatus(campaignName):
     projection = {"_id":0,"name":0,"inputFile":0,"htmlFile":0,"status":1,"campaignRunDateTime":0}
     document = collection.find_one(filter_query, projection)
     return document
+def updateEmailBounceStatus(campaignName,campaignId,recipientEmail,bounceStatus):
+    db = client['reach']
+    collection = db['campaign-emails']
+    filter_query = {"campaignName":campaignName,"campaignOid":campaignId,"emailId":recipientEmail}
+    new_values = {"$set":{"bounceStatus":bounceStatus}}
+    collection.update_one(filter_query,new_values)
