@@ -1,6 +1,13 @@
 from pymongo import MongoClient
 import datetime
-client = MongoClient('mongodb://localhost:27017')
+
+
+username="gjgj_gyfg"
+password="AmVf2ij8qdd6qm5"
+host="localhost"
+port="27017"
+auth_database="admin"
+client = MongoClient(f'mongodb://{username}:{password}@{host}:{port}/{auth_database}')
 
 def createCampaigns(campaignName, fileName, htmlFileName):
 
