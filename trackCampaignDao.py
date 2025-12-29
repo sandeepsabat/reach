@@ -56,14 +56,13 @@ def getCampaignsEmailStats():
                         "path": "$emailList"
                     }
                 },
-                {
-                    "$sort":{
-                        "_id":-1
-                    }
-                },
+                
                 {
                     "$group":{
-                        "_id": "$emailList.campaignName",
+                        "_id": {
+                            "name":"$emailList.campaignName",
+                            "runDate":"$campaignRunDateTime"
+                        },
                        
                         "emailCount": {
                         "$sum": 1
@@ -71,9 +70,14 @@ def getCampaignsEmailStats():
                     }
                 },
                 {
+                    "$sort":{
+                        "_id.runDate":1
+                    }
+                },
+                {
                     "$project":{
                         "_id": 0,
-                        "campaignName": "$_id",
+                        "campaignName": "$_id.name",
                         "emailCount": "$emailCount"
                     }
                 }
@@ -105,11 +109,7 @@ def getDatewiseEmailStats():
                         "path": "$emailList"
                     }
                 },
-                {
-                    "$sort":{
-                        "_id":-1
-                    }
-                },
+                
                 {
                     "$group":{
                         "_id": {
@@ -129,6 +129,11 @@ def getDatewiseEmailStats():
                         "runDate": "$_id",
                         "emailCount": "$emailCount"
                     }
+                },
+                {
+                    "$sort":{
+                        "runDate":1
+                    }
                 }
                 ]
 
@@ -136,6 +141,71 @@ def getDatewiseEmailStats():
     
     datewiseEmailStatList = list(datewiseEmailStat)
     return datewiseEmailStatList
+
+def getBouncesCampaignWise():
+
+    db = client['reach']
+    collection = db['campaigns']
+
+   
+
+    pipeline = [
+            {
+                "$lookup":
+                
+                {
+                    "from": "campaign-emails",
+                    "localField": "_id",
+                    "foreignField": "campaignOid",
+                    "as": "emailList"
+                }
+            },
+            {
+                "$unwind":
+                
+                {
+                    "path": "$emailList"
+                }
+            },
+            {
+                "$match":
+                
+                {
+                    "emailList.bounceStatus": True
+                }
+            },
+            {
+                "$group":
+                
+                {
+                    "_id": {
+                        "name": "$name",
+                        "runDate": "$campaignRunDateTime"
+                        },
+                    "bounceCount": {
+                        "$sum": 1
+                        }
+                }
+            },
+            {
+                    "$sort":{
+                        "_id.runDate":1
+                    }
+                },
+            {
+                    "$project":{
+                        "_id": 0,
+                        "campaignName": "$_id.name",
+                        "bounceCount": "$bounceCount"
+                    }
+                }
+            ]
+
+    emailBounces =  collection.aggregate(pipeline)
+    
+    emailBounceList = list(emailBounces)
+    return emailBounceList
+
     
 
 

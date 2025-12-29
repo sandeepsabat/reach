@@ -3,7 +3,7 @@ import datetime
 import os
 import openpyxl
 from sendEmailDao import createCampaigns
-from trackCampaignDao import addTrackableLinkToCampaign,addEmailOpenEntryForCampaign,getSentEmailsForCampaign,getCampaignNameList,getCampaignsEmailStats,getDatewiseEmailStats
+from trackCampaignDao import addTrackableLinkToCampaign,addEmailOpenEntryForCampaign,getSentEmailsForCampaign,getCampaignNameList,getCampaignsEmailStats,getDatewiseEmailStats,getBouncesCampaignWise
 from bson import json_util
 import operator
 import json
@@ -114,6 +114,12 @@ def campaignEmailStats():
     plt2_x_values = list(map(operator.itemgetter('runDate'),datewiseList))
     plt2_y_values = list(map(operator.itemgetter('emailCount'),datewiseList))
     plt2_img = getBarGraphPlotImage(plt2_x_values,plt2_y_values,'Campaign Run Date','Sent Email Count','Email Sent By Date')
+
+    #Create bar graph plot for 'Email Bounces by Campaigns'
+    emailBounceList = getBouncesCampaignWise()
+    plt3_x_values = list(map(operator.itemgetter('campaignName'),emailBounceList))
+    plt3_y_values = list(map(operator.itemgetter('bounceCount'),emailBounceList))
+    plt3_img = getBarGraphPlotImage(plt3_x_values,plt3_y_values,'Campaigns','Bounce Count','Email Bounces By Campaigns')
     
     
-    return render_template('campaignEmailGraph.html',plot1_url=plt1_img,plot2_url=plt2_img)
+    return render_template('campaignEmailGraph.html',plot1_url=plt1_img,plot2_url=plt2_img,plot3_url=plt3_img)
