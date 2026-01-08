@@ -5,22 +5,17 @@ from email.mime.multipart import MIMEMultipart
 import openpyxl
 import datetime
 import os
-from sendEmailDao import createCampaigns,addEmailToCampaign,updateCampaignStatus,updateEmailBounceStatus
+from sendEmailDao import (createCampaigns,addEmailToCampaign,updateCampaignStatus,
+                          updateEmailBounceStatus,getSenderEmailList,getSenderEmailCredentialDetails)
 
 sendEmail_bp = Blueprint("sendemail",__name__)
 
 #Get the absolute path of teh directory containing the current script
 bas_dir = os.path.dirname(os.path.abspath(__file__))
 
-#Email credentials and details
-sender_email = "harsha.n@mypace-learning.com"  # Replace with your email address
-app_password = "RCszMsI1"  # Replace with your generated app password
 
-# Set up the SMTP server and send the email
-smtp_server = "us2.smtp.mailhostbox.com"  # For Gmail
-port = 587  # For TLS
 
-def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no):
+def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,sender_email,app_password,smtp_server,port):
     log_msg = ""
     
     #Read and extract the email body from html file and pass params to the email body
@@ -61,12 +56,14 @@ def startCampaign():
             fileName = request.form.get('filenames')
             startRow = int(request.form['startrow'])
             endRow = int(request.form['endrow'])
-            return render_template('campaignStarted.html',filename=fileName,startrow=startRow,endrow=endRow)
+            senderEmail = request.form.get('senderemail')
+            return render_template('campaignStarted.html',filename=fileName,startrow=startRow,endrow=endRow,senderemail=senderEmail)
 
         file_directory = os.path.join(bas_dir,'files','excel')
+        senderEmailList = getSenderEmailList()
 
         filenames = os.listdir(file_directory)
-        return render_template('campaignForm.html',fileNames=filenames)
+        return render_template('campaignForm.html',fileNames=filenames,senderEmails=senderEmailList)
 
 @sendEmail_bp.route('/stream')
 def stream():
@@ -75,6 +72,9 @@ def stream():
         filename = request.args.get('fileName')
         startrow = int(request.args.get('startRow'))
         endrow = int(request.args.get('endRow'))
+        senderEmail = request.args.get('senderEmail')
+
+        senderEmail,password,smtpServer,port = getSenderEmailCredentialDetails(senderEmail) # Get sender mail credentails from db based on user selection of email
                     
         #Configure Directory Paths
         input_excel_path = os.path.join(bas_dir,'files','excel')
@@ -104,7 +104,7 @@ def stream():
                     recipient_email = row_cells[5].value
                     first_name = row_cells[3].value
                     last_name= row_cells[4].value
-                    log_msg = sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no)
+                    log_msg = sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,senderEmail,password,smtpServer,port)
                     row_cells[7].value = log_msg
                     workbook.save(filename)
                     addEmailToCampaign(campaign_name,campaign_id,first_name,last_name,recipient_email,log_msg)

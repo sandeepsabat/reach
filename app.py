@@ -3,6 +3,7 @@ import os
 from flask import Flask, jsonify,render_template,request,redirect,url_for,Response,stream_with_context
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
+from sendEmailDao import addSenderEmailDetails
 
 
 
@@ -52,6 +53,19 @@ def create_app():
         filenames = os.listdir(file_directory)
 
         return render_template("fileList.html",files=filenames,header='Uploaded HTML Email Templates')
+    
+    @app.route('/addSenderEmailCredentials',methods=['GET','POST'])
+    def addSenderEmailCredentials():
+        if request.method == 'POST':
+            inputData = request.get_json()
+            senderEmail = inputData['senderEmail']
+            password = inputData['password']
+            smtpServer = inputData['smtpServer']
+            port = int(inputData['port'])
+            return_message = addSenderEmailDetails(senderEmail,password,smtpServer,port)
+            return jsonify({'message':return_message})
+        return render_template('senderCredentialsForm.html')
+
     
     from sendEmailController import sendEmail_bp
     app.register_blueprint(sendEmail_bp,url_prefix='/run')

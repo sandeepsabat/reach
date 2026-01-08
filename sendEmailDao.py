@@ -9,6 +9,42 @@ port="27017"
 auth_database="admin"
 client = MongoClient(f'mongodb://{username}:{password}@{host}:{port}/{auth_database}')
 
+
+def addSenderEmailDetails(senderEmail,password,smtpServer,port):
+    return_message = ''
+    data_record = {'senderEmail':senderEmail,'password':password,'smtpServer':smtpServer,'port':port}
+    db = client['reach']
+    collection = db['sender-emails']
+    filter_query = {"senderEmail":senderEmail}
+    sender_email_credential_record = list(collection.find(filter_query))
+    if not sender_email_credential_record:
+        insertion_result = collection.insert_one(data_record)
+        return_message = 'Inserted Sender Email Credential with Id:'+str(insertion_result.inserted_id)
+    else:
+        document = sender_email_credential_record[-1]
+        return_message = 'Sender Email Credentials already exists with Id:' + str(document["_id"])
+    return return_message
+
+def getSenderEmailList():
+    db = client['reach']
+    collection = db['sender-emails']
+    projection = {"_id":0,"senderEmail":1}
+    result_cursor = collection.find({},projection)
+    senderEmailList = [doc['senderEmail'] for doc in result_cursor]
+    return senderEmailList
+def getSenderEmailCredentialDetails(senderEmail):
+    db = client['reach']
+    collection = db['sender-emails']
+    filter_query = {"senderEmail":senderEmail}
+    document = collection.find_one(filter_query)
+    senderEmail = document["senderEmail"]
+    password = document["password"]
+    smtpServer = document["smtpServer"]
+    port = document["port"]
+    return senderEmail,password,smtpServer,port
+
+
+
 def createCampaigns(campaignName, fileName, htmlFileName):
 
     data_record = {"name":campaignName,"inputFile":fileName,"htmlFile":htmlFileName,"status":'started',"campaignRunDateTime":datetime.datetime.now()}

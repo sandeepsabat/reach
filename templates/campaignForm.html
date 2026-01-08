@@ -21,6 +21,12 @@
         
         <label for="endrow">End Row:</label>
         <input type="number" id="endrow" name="endrow" required><br><br>
+
+        <label for="senderemail">Sender Email:</label>
+        <select id="senderemail" name="senderemail">
+            {% for email in senderEmails %}
+                <option value="{{email}}">{{email}}</option>
+            {% endfor %}
         
         <input type="submit" value="Submit">
     </form>
