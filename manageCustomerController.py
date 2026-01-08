@@ -1,0 +1,86 @@
+from flask import Blueprint,request, jsonify,render_template,redirect,url_for,Response,stream_with_context
+import smtplib,ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import openpyxl
+import datetime
+import os
+from manageCustomerDao import createCustomerCohort,getCustomerCohortList,mapCustomerToCohort
+
+
+manageCustomer_bp = Blueprint("managecustomer",__name__)
+
+#Get the absolute path of teh directory containing the current script
+bas_dir = os.path.dirname(os.path.abspath(__file__))
+
+@manageCustomer_bp.route('/createCohort',methods=['GET','POST'])
+def createCohort():
+    if request.method == 'POST':
+            inputData = request.get_json()
+            cohortName = inputData['cohortName']
+            description = inputData['description']
+            shortCode = inputData['shortCode']
+
+            return_message = createCustomerCohort(cohortName,description,shortCode)
+            return jsonify({'message':return_message})
+    
+    return render_template('createCohort.html')
+
+@manageCustomer_bp.route('/addCustomerToCohort',methods=['GET','POST'])
+def addCustomerToCohort():
+    if request.method == 'POST':
+            cohortName = request.form.get('cohortname')
+            fileName = request.form.get('filenames')
+            startRow = int(request.form['startrow'])
+            endRow = int(request.form['endrow'])
+
+            print (cohortName,fileName,startRow,endRow)
+            
+            return render_template('cohortFill.html',cohortname=cohortName,filename=fileName,startrow=startRow,endrow=endRow)
+      
+    cohortlist = getCustomerCohortList()
+    file_directory = os.path.join(bas_dir,'files','excel')
+    filenames = os.listdir(file_directory)
+    return render_template('customerCohortForm.html',cohortList=cohortlist,fileNames=filenames)
+
+@manageCustomer_bp.route('/custUploadStream')
+def custUploadStream():
+        
+        #Collect all the arguments passed by the client html
+        cohortname = request.args.get('cohortName')
+        filename = request.args.get('fileName')
+        startrow = int(request.args.get('startRow'))
+        endrow = int(request.args.get('endRow'))
+                    
+        #Configure Directory Paths
+        input_excel_path = os.path.join(bas_dir,'files','excel')
+        excel_file_name = filename
+
+        #Load the input excel file
+        filename = os.path.join(input_excel_path,excel_file_name)
+        workbook = openpyxl.load_workbook(filename,data_only=True)
+        sheet = workbook['Sheet1']
+
+        
+
+          
+        def generate():
+           
+            try:
+                for row_cells in sheet.iter_rows(min_row=startrow,max_row=endrow):
+                    serial_no = row_cells[2].value
+                    first_name = row_cells[3].value
+                    last_name = row_cells[4].value
+                    customer_email = row_cells[5].value
+                    organization_name= row_cells[6].value
+                    
+                    log_msg = mapCustomerToCohort(cohortname,first_name,last_name,customer_email,serial_no,organization_name)
+                    yield f"data: {log_msg}\n\n" #Sends message to the client html as server side events
+                    
+            finally:
+                #This block executes code when the for loop in generate function ends
+                #Send a close event to client to close the streaming. Also add a message to inform user that email sending is complete
+                yield f"event: close\ndata: Customer upload to cohort complete\n\n"
+        
+        return Response(stream_with_context(generate()), content_type='text/event-stream')
+        workbook.close()

@@ -72,6 +72,9 @@ def create_app():
 
     from campaignTrackingController import campaignTracker_bp
     app.register_blueprint(campaignTracker_bp,url_prefix='/track')
+
+    from manageCustomerController import manageCustomer_bp
+    app.register_blueprint(manageCustomer_bp,url_prefix='/customer')
     
 
     return app

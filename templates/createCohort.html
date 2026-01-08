@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cohort Creation</title>
+    <style>
+        .form-field {
+            display: flex; /* Makes the container a flex container */
+            align-items: flex-start; /* Aligns items to the start (top) of the cross axis */
+            margin-bottom: 10px; /* Adds space between form fields */
+            }
+
+        .form-field label {
+            /* Optional: adjust label width and add margin for spacing */
+            width: 150px;
+            margin-right: 10px;
+            }
+
+        .form-field textarea {
+            /* Ensures the textarea grows within the container if needed */
+            flex: 1; 
+            }
+
+    </style>
+</head>
+<body>
+    <h1>Create Customer Cohort</h1>
+    <p><a href="{{url_for('index')}}"> Back to Home</a></p>
+    <div class = "form-field">
+        <form id ="cohortCreationForm">
+            <label for="cohortname">Cohort Name:</label>
+            <input type="text" id="cohortname" name="cohortname" required><br><br>
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="5" cols="60">
+                Add brief description of cohort...
+            </textarea><br><br>
+            <label for="shortcode">Short Code:</label>
+            <input type="text" id="shortcode" name="shortcode" required><br><br>
+            <button type="submit">Submit</button>
+        </form>
+
+    </div>
+    <div id="resultArea"></div>
+        <script>
+            async function submitFormData(){
+                document.getElementById('cohortCreationForm').addEventListener('submit',async function(event){
+                //Prevent the default form submission(stops the page reload)
+                event.preventDefault();
+
+                //Get the data from the input field
+                const cohortName= document.getElementById('cohortname').value;
+                const description= document.getElementById('description').value;
+                const shortCode= document.getElementById('shortcode').value;
+                
+
+
+                //Send the data to the server using the get API
+                const url_endpoint = "{{url_for('managecustomer.createCohort')}}";
+                const response = await fetch(url_endpoint,{
+                    method:'POST',
+                    headers:{'content-type':'application/json'},
+                    body:JSON.stringify({'cohortName':cohortName,'description':description,'shortCode':shortCode}),
+                });
+
+                const resultData = await response.json();
+                const resultDataString = resultData["message"];
+
+                resultArea.innerHTML = `<h3><pre>${resultDataString}</pre></h3>`;
+
+            })
+        }
+        submitFormData();
+        </script>
+    
+    </body>
+</html>
