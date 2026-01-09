@@ -39,7 +39,7 @@ def addCustomerToCohort():
             return render_template('cohortFill.html',cohortname=cohortName,filename=fileName,startrow=startRow,endrow=endRow)
       
     cohortlist = getCustomerCohortList()
-    file_directory = os.path.join(bas_dir,'files','excel')
+    file_directory = os.path.join(bas_dir,'files','customerlist')
     filenames = os.listdir(file_directory)
     return render_template('customerCohortForm.html',cohortList=cohortlist,fileNames=filenames)
 
@@ -53,7 +53,7 @@ def custUploadStream():
         endrow = int(request.args.get('endRow'))
                     
         #Configure Directory Paths
-        input_excel_path = os.path.join(bas_dir,'files','excel')
+        input_excel_path = os.path.join(bas_dir,'files','customerlist')
         excel_file_name = filename
 
         #Load the input excel file
@@ -67,12 +67,12 @@ def custUploadStream():
         def generate():
            
             try:
-                for row_cells in sheet.iter_rows(min_row=startrow,max_row=endrow):
-                    serial_no = row_cells[2].value
-                    first_name = row_cells[3].value
-                    last_name = row_cells[4].value
-                    customer_email = row_cells[5].value
-                    organization_name= row_cells[6].value
+                for index,row in enumerate(sheet.iter_rows(min_row=startrow,max_row=endrow),start=1):
+                    serial_no = index
+                    first_name = row[3].value
+                    last_name = row[4].value
+                    customer_email = row[5].value
+                    organization_name= row[6].value
                     
                     log_msg = mapCustomerToCohort(cohortname,first_name,last_name,customer_email,serial_no,organization_name)
                     yield f"data: {log_msg}\n\n" #Sends message to the client html as server side events

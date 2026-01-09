@@ -128,7 +128,7 @@ def uploadEmailBounce():
             endRow = int(request.form['endrow'])
             return render_template('emailBounceUpdateStarted.html',filename=fileName,startrow=startRow,endrow=endRow)
 
-        file_directory = os.path.join(bas_dir,'files','excel')
+        file_directory = os.path.join(bas_dir,'files','emailbounces')
 
         filenames = os.listdir(file_directory)
         return render_template('emailBounceForm.html',fileNames=filenames)    
@@ -143,8 +143,7 @@ def bounceStream():
         endrow = int(request.args.get('endRow'))
                     
         #Configure Directory Paths
-        input_excel_path = os.path.join(bas_dir,'files','excel')
-        hmtl_file_path = os.path.join(bas_dir,'files','html')
+        input_excel_path = os.path.join(bas_dir,'files','emailbounces')
         excel_file_name = filename
 
         #Load the input excel file

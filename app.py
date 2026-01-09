@@ -20,31 +20,40 @@ def create_app():
     def index():
         return render_template('index.html')
     
-    @app.route('/fileUpload')
+    @app.route('/fileUpload',methods=['GET','POST'])
     def fileUploadEndpoint():
-        return render_template('fileUpload.html')
-    
-    @app.route('/fileUpload', methods=['POST'])
-    def upload_files():
-        uploaded_file = request.files['file']
-        filename = secure_filename(uploaded_file.filename)
-        root,extension = os.path.splitext(filename)
+        if request.method == 'POST':
+            uploaded_file = request.files['file']
+            fileType = request.form.get('filetype')
+            filename = secure_filename(uploaded_file.filename)
+            
+            
 
-        if extension == '.xlsx':
-            uploaded_file.save(os.path.join(bas_dir,'files','excel', filename))
+            if fileType == 'customerlist':
+                uploaded_file.save(os.path.join(bas_dir,'files','customerlist', filename))
         
-        if extension == '.html':
-            uploaded_file.save(os.path.join(bas_dir,'files','html', filename))
+            if fileType == 'htmlformat':
+                uploaded_file.save(os.path.join(bas_dir,'files','html', filename))
+            
+            if fileType == 'emailbounces':
+                uploaded_file.save(os.path.join(bas_dir,'files','emailbounces', filename))
+            
 
-        return redirect(url_for('index'))
+
+            return redirect(url_for('index'))
+
+        fileTypeList=['customerlist','htmlformat','emailbounces']
+        return render_template('fileUpload.html',fileTypes=fileTypeList)
+    
+   
     
     @app.route('/inputFilesList')
     def inputFilesList():
-        file_directory = os.path.join(bas_dir,'files','excel')
+        file_directory = os.path.join(bas_dir,'files','customerlist')
 
         filenames = os.listdir(file_directory)
 
-        return render_template("fileList.html",files=filenames,header='Uploaded Input Files')
+        return render_template("fileList.html",files=filenames,header='Uploaded Customer Files')
     
     @app.route('/htmlEmailTemplatesList')
     def htmlEmailTemplatesList():
@@ -53,6 +62,14 @@ def create_app():
         filenames = os.listdir(file_directory)
 
         return render_template("fileList.html",files=filenames,header='Uploaded HTML Email Templates')
+    
+    @app.route('/emailBouncesList')
+    def emailBouncesList():
+        file_directory = os.path.join(bas_dir,'files','emailbounces')
+
+        filenames = os.listdir(file_directory)
+
+        return render_template("fileList.html",files=filenames,header='Uploaded Email Bounce Files')
     
     @app.route('/addSenderEmailCredentials',methods=['GET','POST'])
     def addSenderEmailCredentials():
