@@ -2,21 +2,94 @@
 <html>
   <head>
     <title>Reach</title>
+    <style>
+      .fieldset-wrapper {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); /* Responsive auto-filling columns */
+          gap: 20px; /* Space between the fieldset boxes */
+          padding: 10px;
+      }
+
+      .fieldset-wrapper fieldset {
+          /* Default styling for fieldsets */
+          border: 1px solid #ddd;
+          padding: 15px;
+          border-radius: 5px;
+      }
+
+
+      .titled-box {
+        border: 2px solid #000; /* Adds the outline/border */
+        padding: 20px;          /* Space between content and border */
+        margin: 20px;           /* Space outside the box */
+        border-radius: 8px;     /* Optional: rounded corners */
+      }
+
+      .titled-box legend {
+        padding: 0 10px;        /* Space around the title text, cutting the border */
+        font-weight: bold;
+        color: #333;
+      }
+
+    </style>
   </head>
   <body>
-    <h1>Manage Email Campaigns</h1>
-        <p><a href="{{url_for('fileUploadEndpoint')}}"> Upload a file</a></p>
-        <p><a href="{{url_for('addSenderEmailCredentials')}}"> Add Sender Credentials</a></p>
-        <p><a href="{{url_for('managecustomer.createCohort')}}"> Create Cohort</a></p>
-        <p><a href="{{url_for('inputFilesList')}}"> View Uploaded Customer Files</a></p>
-        <p><a href="{{url_for('campaigntracker.generateTrackableLink')}}"> Generate Trackable Link</a></p>
-        <p><a href="{{url_for('htmlEmailTemplatesList')}}"> View HTML Email Templates</a></p>
-        <p><a href="{{url_for('emailBouncesList')}}"> View Uploaded Email Bounces Files</a></p>
-        <p><a href="{{url_for('managecustomer.addCustomerToCohort')}}"> Upload Customer To Cohort</a></p>
-        <p><a href="{{url_for('sendemail.startCampaign')}}"> Start Email Campaign</a></p>
-        <p><a href="{{url_for('sendemail.uploadEmailBounce')}}"> Upload Email Bounces</a></p>
-        <p><a href="{{url_for('campaigntracker.getEmailListForCampaign')}}"> View Tabular Report</a></p>
-        <p><a href="{{url_for('campaigntracker.campaignEmailStats')}}"> View Charts</a></p>
+    <h1>Manage Customer Relationship</h1>
+
+    <div class="fieldset-wrapper">
+      <fieldset class="titled-box">
+          <legend>Basic Setup</legend>
+            <p><a href="{{url_for('addSenderEmailCredentials')}}"> Add Sender Credentials</a></p>
+      </fieldset>
+      <fieldset class="titled-box">
+          <legend>Files Management</legend>
+            <p><a href="{{url_for('fileUploadEndpoint')}}"> Upload a file</a></p>
+            <p><a href="{{url_for('inputFilesList')}}"> View Uploaded Customer Files</a></p>
+            <p><a href="{{url_for('htmlEmailTemplatesList')}}"> View HTML Email Templates</a></p>
+            <p><a href="{{url_for('emailBouncesList')}}"> View Uploaded Email Bounces Files</a></p>
+      </fieldset>
+
+      <fieldset class="titled-box">
+          <legend>Customer Management</legend>
+            <p><a href="{{url_for('managecustomer.createCohort')}}"> Create Cohort</a></p>
+            <p><a href="{{url_for('managecustomer.addCustomerToCohort')}}"> Upload Customer To Cohort</a></p>
+      </fieldset>
+
+      <fieldset class="titled-box">
+          <legend>Campaign Set Up</legend>
+            <p><a href="{{url_for('createcampaign.addEmailTemplate')}}"> Add Email Template</a></p>
+            <p><a href="{{url_for('campaigntracker.generateTrackableLink')}}"> Generate Trackable Link</a></p>
+      </fieldset>
+
+      <fieldset class="titled-box">
+          <legend>Campaign Tracking</legend>
+            <p><a href="{{url_for('sendemail.startCampaign')}}"> Start Email Campaign</a></p>
+            <p><a href="{{url_for('sendemail.uploadEmailBounce')}}"> Upload Email Bounces</a></p>
+      </fieldset>
+
+      <fieldset class="titled-box">
+          <legend>Reports</legend>
+            <p><a href="{{url_for('campaigntracker.getEmailListForCampaign')}}"> View Tabular Report</a></p>
+            <p><a href="{{url_for('campaigntracker.campaignEmailStats')}}"> View Charts</a></p>
+      </fieldset>
+
+    </div>
+    
+
+
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
     
   </body>

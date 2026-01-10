@@ -10,24 +10,27 @@
     
     <div class="form-container">
     <form action="/run/startCampaign" method="POST">
-        <label for="filenames">File Name:</label>
-        <select id="filenames" name="filenames">
-            {% for name in fileNames %}
-                <option value="{{name}}">{{name}}</option>
-            {% endfor %}
-        </select><br><br>
-        <label for="startrow">Start Row:</label>
-        <input type="number" id="startrow" name="startrow" required><br><br>
-        
-        <label for="endrow">End Row:</label>
-        <input type="number" id="endrow" name="endrow" required><br><br>
-
         <label for="senderemail">Sender Email:</label>
         <select id="senderemail" name="senderemail">
-            {% for email in senderEmails %}
+            <option value="" disabled selected hidden>Select an option</option>
+            {% for email in senderemails %}
                 <option value="{{email}}">{{email}}</option>
             {% endfor %}
-        
+        </select><br><br>
+        <label for="cohortname">Cohort Name:</label>
+        <select id="cohortname" name="cohortname">
+            <option value="" disabled selected hidden>Select an option</option>
+            {% for cohort in cohortlist %}
+                <option value="{{cohort}}">{{cohort}}</option>
+            {% endfor %}
+        </select><br><br>
+        <label for="emailtemplates">Email Templates:</label>
+        <select id="emailtemplates" name="emailtemplates">
+            <option value="" disabled selected hidden>Select an option</option>
+            {% for template in emailtemplatelist %}
+                <option value="{{template}}">{{template}}</option>
+            {% endfor %}
+        </select><br><br>
         <input type="submit" value="Submit">
     </form>
     </div>

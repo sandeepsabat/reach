@@ -7,6 +7,8 @@ import datetime
 import os
 from sendEmailDao import (createCampaigns,addEmailToCampaign,updateCampaignStatus,
                           updateEmailBounceStatus,getSenderEmailList,getSenderEmailCredentialDetails)
+from manageCustomerDao import getCustomerCohortList,getCohortEmailList,getCampaignName
+from createCampaignDao import getEmailTemplateList,getEmailTemplateDetails
 
 sendEmail_bp = Blueprint("sendemail",__name__)
 
@@ -41,74 +43,73 @@ def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,
             server.login(sender_email, app_password)
             server.send_message(msg)
         
-        log_msg = f"Sent email at slno {serial_no} at time: " + datetime.datetime.now().strftime("%d/%m/%Y,%H:%M:%S")
-        return log_msg
+        sent_date_time = datetime.datetime.now()
+        log_msg = 'email sent successfully'
+        disp_msg = f"Email sent to {first_name} at email:{recipient_email}"
+        sent_flag = True
+        return log_msg,disp_msg,sent_flag,sent_date_time
         
     except Exception as e:
-        log_msg = f"Error sending email at slno {serial_no}:" + e
-        return log_msg
+        log_msg = f"Error sending email:" + e
+        disp_msg = f"Failed to sent email to {first_name} at email:{recipient_email}. Error:" + e
+        sent_flag = False
+        sent_date_time = datetime.datetime.now()
+        return log_msg,disp_msg,sent_flag,sent_date_time
 
     
 
 @sendEmail_bp.route('/startCampaign',methods=['GET','POST'])
 def startCampaign():
         if request.method == 'POST':
-            fileName = request.form.get('filenames')
-            startRow = int(request.form['startrow'])
-            endRow = int(request.form['endrow'])
+            cohortName = request.form.get('cohortname')
             senderEmail = request.form.get('senderemail')
-            return render_template('campaignStarted.html',filename=fileName,startrow=startRow,endrow=endRow,senderemail=senderEmail)
+            emailTemplates = request.form.get('emailtemplates')
+            return render_template('campaignStarted.html',cohortname=cohortName,senderemail=senderEmail,emailtemplates=emailTemplates)
 
-        file_directory = os.path.join(bas_dir,'files','excel')
+        
         senderEmailList = getSenderEmailList()
+        cohortList = getCustomerCohortList()
+        emailTemplateList = getEmailTemplateList()
 
-        filenames = os.listdir(file_directory)
-        return render_template('campaignForm.html',fileNames=filenames,senderEmails=senderEmailList)
+        file_directory = os.path.join(bas_dir,'files','html')
+        fileNames = os.listdir(file_directory)
+        return render_template('campaignForm.html',cohortlist=cohortList,senderemails=senderEmailList,filenames=fileNames,emailtemplatelist=emailTemplateList)
 
-@sendEmail_bp.route('/stream')
-def stream():
+@sendEmail_bp.route('/streamCampaign')
+def streamCampaign():
         
         #Collect all the arguments passed by the client html
-        filename = request.args.get('fileName')
-        startrow = int(request.args.get('startRow'))
-        endrow = int(request.args.get('endRow'))
-        senderEmail = request.args.get('senderEmail')
+        cohortname = request.args.get('cohortName')
+        senderemail = request.args.get('senderEmail')
+        emailtemplates = request.args.get('emailTemplates')
 
-        senderEmail,password,smtpServer,port = getSenderEmailCredentialDetails(senderEmail) # Get sender mail credentails from db based on user selection of email
-                    
-        #Configure Directory Paths
-        input_excel_path = os.path.join(bas_dir,'files','excel')
+        
+        #Prepare for running the campaign
+        subject_line,htmlFileName,emailShortCode= getEmailTemplateDetails(emailtemplates)
+        campaign_name = getCampaignName(cohortname,emailShortCode)
+        cohortEmailList = getCohortEmailList(cohortname)
+        senderEmail,password,smtpServer,port = getSenderEmailCredentialDetails(senderemail) # Get sender mail credentails from db based on user selection of email
+
+        #Build directory path for getting the html email template
         hmtl_file_path = os.path.join(bas_dir,'files','html')
-        excel_file_name = filename
-
-        #Load the input excel file
-        filename = os.path.join(input_excel_path,excel_file_name)
-        workbook = openpyxl.load_workbook(filename)
-        sheet = workbook['Sheet1']
-
-        #From the input excel file extract the campaign name, the email html file name and subject line
-        campaign_name = sheet['B1'].value
-        html_file_name = sheet['B2'].value
-        email_html_file = os.path.join(hmtl_file_path,html_file_name)
-        subject_line = sheet['B3'].value
-
+        email_html_file = os.path.join(hmtl_file_path,htmlFileName)
+        
         #Create an entry for email campaign in database
-        campaign_id = createCampaigns(campaign_name,excel_file_name,html_file_name)
+        campaign_id = createCampaigns(campaign_name,subject_line,htmlFileName) 
 
           
         def generate():
            
             try:
-                for row_cells in sheet.iter_rows(min_row=startrow,max_row=endrow):
-                    serial_no = row_cells[2].value
-                    recipient_email = row_cells[5].value
-                    first_name = row_cells[3].value
-                    last_name= row_cells[4].value
-                    log_msg = sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,senderEmail,password,smtpServer,port)
-                    row_cells[7].value = log_msg
-                    workbook.save(filename)
-                    addEmailToCampaign(campaign_name,campaign_id,first_name,last_name,recipient_email,log_msg)
-                    yield f"data: {log_msg}\n\n" #Sends message to the client html as server side events
+                for row in cohortEmailList:
+                    serial_no = row['serialNo'] 
+                    recipient_email = row['email'] 
+                    first_name = row['firstName'] 
+                    last_name= row['lastName']
+                    #log_msg = "Customer Details:" + first_name + " " + last_name + ",Email:" + recipient_email + ",Serial No:" + str(serial_no) + "Subject Line:" + subject_line
+                    log_msg,disp_msg,sent_flag,sent_date_time = sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,senderEmail,password,smtpServer,port)
+                    addEmailToCampaign(campaign_name,campaign_id,first_name,last_name,recipient_email,log_msg,sent_flag,sent_date_time)
+                    yield f"data: {disp_msg}\n\n" #Sends message to the client html as server side events
                     
             finally:
                 #This block executes code when the for loop in generate function ends
@@ -117,7 +118,7 @@ def stream():
                 yield f"event: close\ndata: Email sending is complete\n\n"
         
         return Response(stream_with_context(generate()), content_type='text/event-stream')
-        workbook.close()
+        
 
             
 @sendEmail_bp.route('/uploadEmailBounce',methods=['GET','POST'])

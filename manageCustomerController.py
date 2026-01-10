@@ -5,7 +5,8 @@ from email.mime.multipart import MIMEMultipart
 import openpyxl
 import datetime
 import os
-from manageCustomerDao import createCustomerCohort,getCustomerCohortList,mapCustomerToCohort
+import urllib.parse
+from manageCustomerDao import (createCustomerCohort,getCustomerCohortList,mapCustomerToCohort,addCustomer,getNextSerialNoForCohort)
 
 
 manageCustomer_bp = Blueprint("managecustomer",__name__)
@@ -33,9 +34,6 @@ def addCustomerToCohort():
             fileName = request.form.get('filenames')
             startRow = int(request.form['startrow'])
             endRow = int(request.form['endrow'])
-
-            print (cohortName,fileName,startRow,endRow)
-            
             return render_template('cohortFill.html',cohortname=cohortName,filename=fileName,startrow=startRow,endrow=endRow)
       
     cohortlist = getCustomerCohortList()
@@ -51,6 +49,7 @@ def custUploadStream():
         filename = request.args.get('fileName')
         startrow = int(request.args.get('startRow'))
         endrow = int(request.args.get('endRow'))
+        
                     
         #Configure Directory Paths
         input_excel_path = os.path.join(bas_dir,'files','customerlist')
@@ -67,14 +66,15 @@ def custUploadStream():
         def generate():
            
             try:
-                for index,row in enumerate(sheet.iter_rows(min_row=startrow,max_row=endrow),start=1):
-                    serial_no = index
+                for row in sheet.iter_rows(min_row=startrow,max_row=endrow):
+                    serial_no = getNextSerialNoForCohort(cohortname)
                     first_name = row[3].value
                     last_name = row[4].value
                     customer_email = row[5].value
                     organization_name= row[6].value
+                    customer_id = addCustomer(first_name,last_name,customer_email,organization_name)
                     
-                    log_msg = mapCustomerToCohort(cohortname,first_name,last_name,customer_email,serial_no,organization_name)
+                    log_msg = mapCustomerToCohort(cohortname,customer_id,serial_no)
                     yield f"data: {log_msg}\n\n" #Sends message to the client html as server side events
                     
             finally:

@@ -84,6 +84,9 @@ def create_app():
         return render_template('senderCredentialsForm.html')
 
     
+    from createCampaignController import createCampaign_bp
+    app.register_blueprint(createCampaign_bp,url_prefix='/campaign')
+
     from sendEmailController import sendEmail_bp
     app.register_blueprint(sendEmail_bp,url_prefix='/run')
 

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Email Templates</title>
+    <style>
+        .form-field {
+            display: flex; /* Makes the container a flex container */
+            align-items: flex-start; /* Aligns items to the start (top) of the cross axis */
+            margin-bottom: 10px; /* Adds space between form fields */
+            }
+
+        .form-field label {
+            /* Optional: adjust label width and add margin for spacing */
+            width: 150px;
+            margin-right: 10px;
+            }
+
+        .form-field textarea {
+            /* Ensures the textarea grows within the container if needed */
+            flex: 1; 
+            }
+
+    </style>
+</head>
+<body>
+    <h1>Add Email Templates</h1>
+    <p><a href="{{url_for('index')}}"> Back to Home</a></p>
+    <div id="resultArea"></div>
+    <div class = "form-field">
+        <form id ="addEmailTemplateForm">
+            <label for="templatename">Template Name:</label>
+            <input type="text" id="templatename" name="templatename" required><br><br>
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="5" cols="60" placeholder="Add brief description of template..."></textarea><br><br>
+            <label for="subjectline">Subject Line:</label>
+            <textarea id="subjectline" name="subjectline" rows="5" cols="60" placeholder="Add a subject line for template..."></textarea><br><br>
+            <label for="filenames">File Name:</label>
+            <select id="filenames" name="filenames">
+                <option value="" disabled selected hidden>Select an option</option>
+                {% for name in fileNames %}
+                    <option value="{{name}}">{{name}}</option>
+                {% endfor %}
+            </select><br><br>
+            <label for="shortcode">Short Code:</label>
+            <input type="text" id="shortcode" name="shortcode" required><br><br>
+            <button type="submit">Submit</button>
+        </form>
+
+    </div>
+    
+        <script>
+            async function submitFormData(){
+                document.getElementById('addEmailTemplateForm').addEventListener('submit',async function(event){
+                //Prevent the default form submission(stops the page reload)
+                event.preventDefault();
+
+                //Get the data from the input field
+                const templateName= document.getElementById('templatename').value;
+                const description= document.getElementById('description').value;
+                const subjectLine= document.getElementById('subjectline').value;
+                const fileName= document.getElementById('filenames').value;
+                const shortCode= document.getElementById('shortcode').value;
+                
+
+
+                //Send the data to the server using the get API
+                const url_endpoint = "{{url_for('createcampaign.addEmailTemplate')}}";
+                const response = await fetch(url_endpoint,{
+                    method:'POST',
+                    headers:{'content-type':'application/json'},
+                    body:JSON.stringify({'templateName':templateName,'description':description,'subjectLine':subjectLine,'fileName':fileName,'shortCode':shortCode}),
+                });
+
+                const resultData = await response.json();
+                const resultDataString = resultData["message"];
+
+                resultArea.innerHTML = `<h3><pre>${resultDataString}</pre></h3>`;
+
+            })
+        }
+        submitFormData();
+        </script>
+    
+    </body>
+</html>

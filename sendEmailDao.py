@@ -45,9 +45,9 @@ def getSenderEmailCredentialDetails(senderEmail):
 
 
 
-def createCampaigns(campaignName, fileName, htmlFileName):
+def createCampaigns(campaignName, subjectline, htmlFileName):
 
-    data_record = {"name":campaignName,"inputFile":fileName,"htmlFile":htmlFileName,"status":'started',"campaignRunDateTime":datetime.datetime.now()}
+    data_record = {"name":campaignName,"subjectLine":subjectline,"htmlFile":htmlFileName,"status":'started',"campaignRunDateTime":datetime.datetime.now()}
     db = client['reach']
     collection = db['campaigns']
     filter_query = {"name":campaignName}
@@ -59,8 +59,13 @@ def createCampaigns(campaignName, fileName, htmlFileName):
         document = campaign_records[-1]
         return document["_id"]
 
-def addEmailToCampaign(campaignName,CampaignId,firstName,lastName,recipientEmail,log_msg):
-    data_record = {"campaignName":campaignName,"campaignOid":CampaignId,"firstName":firstName,"lastName":lastName,"emailId":recipientEmail,"logMessage":log_msg}
+def addEmailToCampaign(campaignName,CampaignId,firstName,lastName,recipientEmail,log_msg,sent_flag,sent_date_time):
+    data_record = {}
+    if sent_flag == True:
+        data_record = {"campaignName":campaignName,"campaignOid":CampaignId,"firstName":firstName,"lastName":lastName,"emailId":recipientEmail,"logMessage":log_msg,"emailSentDateTime":sent_date_time}
+    if sent_flag == False:
+        data_record = {"campaignName":campaignName,"campaignOid":CampaignId,"firstName":firstName,"lastName":lastName,"emailId":recipientEmail,"logMessage":log_msg}
+
     db = client['reach']
     db['campaign-emails'].insert_one(data_record)
 
