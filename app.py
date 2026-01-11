@@ -1,11 +1,15 @@
 #app.py
 import os
+from dotenv import load_dotenv
 from flask import Flask, jsonify,render_template,request,redirect,url_for,Response,stream_with_context
+from flask_jwt_extended import JWTManager
+from datetime import timedelta, datetime
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 from sendEmailDao import addSenderEmailDetails
+from flask_cors import cross_origin
 
-
+load_dotenv()
 
 
 def create_app():
@@ -14,6 +18,44 @@ def create_app():
 
     #Get the absolute path of teh directory containing the current script
     bas_dir = os.path.dirname(os.path.abspath(__file__))
+
+    app.config['MONGO_URI'] = os.getenv('MONGO_URI')
+    app.config['MONGO_MAIN'] = os.getenv('MONGO_MAIN')
+    client = MongoClient(app.config['MONGO_URI'])
+    app.db = client[app.config['MONGO_MAIN']]
+
+
+    #Security-Keys
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+
+
+    access_secs = int(os.getenv('JWT_ACCESS_EXPIRES'))
+    refresh_secs = int(os.getenv('JWT_REFRESH_EXPIRES'))
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=access_secs)
+    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(seconds=refresh_secs)
+
+    
+
+    # Create TTL index for token_blocklist
+    ttl_seconds = refresh_secs + 60
+    app.db.token_blocklist.create_index("created_at", expireAfterSeconds=ttl_seconds)
+    app.db.token_blocklist.create_index("jti", unique=True)
+
+
+    jwt = JWTManager(app)
+    @jwt.token_in_blocklist_loader
+    def check_if_revoked(jwt_header, jwt_payload):
+        jti = jwt_payload.get("jti")
+        return app.db.token_blocklist.find_one({"jti": jti}) is not None
+
+    @jwt.revoked_token_loader
+    def revoked(jwt_header, jwt_payload):
+        return jsonify({"msg": "Token revoked"}), 401
+
+    @jwt.expired_token_loader
+    def expired(jwt_header, jwt_payload):
+        return jsonify({"msg": "Token expired"}), 401
    
 
     @app.route('/')
@@ -72,6 +114,7 @@ def create_app():
         return render_template("fileList.html",files=filenames,header='Uploaded Email Bounce Files')
     
     @app.route('/addSenderEmailCredentials',methods=['GET','POST'])
+    @cross_origin(origins="http://localhost:5173",methods=['GET','POST'])
     def addSenderEmailCredentials():
         if request.method == 'POST':
             inputData = request.get_json()
@@ -84,6 +127,9 @@ def create_app():
         return render_template('senderCredentialsForm.html')
 
     
+    from auth import auth_bp
+    app.register_blueprint(auth_bp,url_prefix='/auth')
+
     from createCampaignController import createCampaign_bp
     app.register_blueprint(createCampaign_bp,url_prefix='/campaign')
 

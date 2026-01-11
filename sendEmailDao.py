@@ -19,7 +19,7 @@ def addSenderEmailDetails(senderEmail,password,smtpServer,port):
     sender_email_credential_record = list(collection.find(filter_query))
     if not sender_email_credential_record:
         insertion_result = collection.insert_one(data_record)
-        return_message = 'Inserted Sender Email Credential with Id:'+str(insertion_result.inserted_id)
+        return_message = 'Sender Email Credential added with Id:'+str(insertion_result.inserted_id)
     else:
         document = sender_email_credential_record[-1]
         return_message = 'Sender Email Credentials already exists with Id:' + str(document["_id"])
