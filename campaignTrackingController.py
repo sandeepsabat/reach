@@ -1,4 +1,4 @@
-from flask import Blueprint,request, jsonify,render_template,redirect,url_for,Response,stream_with_context
+from flask import Blueprint,request, jsonify,render_template,redirect,url_for,Response,stream_with_context,send_file
 import datetime
 import os
 import openpyxl
@@ -15,6 +15,7 @@ matplotlib.use('Agg')# Use the Agg backend for non-interactive image generation
 import matplotlib.pyplot as plt
 import io
 from textwrap import wrap
+from PIL import Image
 
 
 
@@ -59,7 +60,11 @@ def generateTrackableLink():
 def trackCampaign():
     campaignName = request.args.get('name')
     addEmailOpenEntryForCampaign(campaignName)
-    return '',204
+    img = Image.new('RGB',(100,100),color='red')
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr,format='PNG')
+    img_byte_arr.seek(0)
+    return send_file(img_byte_arr,mimetype='image/png',download_name='generated_image.')
 
 @campaignTracker_bp.route('/getEmailListForCampaign',methods=['GET','POST'])
 def getEmailListForCampaign():

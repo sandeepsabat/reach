@@ -7,13 +7,14 @@ from datetime import timedelta, datetime
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 from sendEmailDao import addSenderEmailDetails
-from flask_cors import cross_origin
+from flask_cors import cross_origin,CORS
 
 load_dotenv()
 
 
 def create_app():
     app = Flask(__name__)
+    CORS(app,resources={r"/*":{"origins":"http://localhost:5173","methods":["POST","OPTIONS","GET"],"allow_headers":["Content-Type","Authorization"]}})
   
 
     #Get the absolute path of teh directory containing the current script
@@ -62,7 +63,43 @@ def create_app():
     def index():
         return render_template('index.html')
     
-    @app.route('/fileUpload',methods=['GET','POST'])
+    @app.route('/uploadfile',methods=['POST','OPTIONS'])
+    def fileUploadFromFrontEnd():
+        if request.method == 'POST' or request.method =='OPTIONS':
+            returnMessage = ''
+            try:
+
+                uploaded_file = request.files['file']
+                fileType = request.form.get('filetype')
+                filename = secure_filename(uploaded_file.filename)
+                
+                
+
+                if fileType == 'customerlist':
+                    uploaded_file.save(os.path.join(bas_dir,'files','customerlist', filename))
+            
+                if fileType == 'htmlformat':
+                    uploaded_file.save(os.path.join(bas_dir,'files','html', filename))
+                
+                if fileType == 'emailbounces':
+                    uploaded_file.save(os.path.join(bas_dir,'files','emailbounces', filename))
+                
+
+                returnMessage = {'message':"File uploaded successfully"}
+                
+
+            except Exception as e: 
+
+                returnMessage = {'message':f'Error: {e}'}
+    
+
+            return returnMessage
+        
+            
+
+        
+    
+    @app.route('/fileUpload',methods=['GET','POST']) # This method to be removed once the front end is fully functional
     def fileUploadEndpoint():
         if request.method == 'POST':
             uploaded_file = request.files['file']
@@ -81,13 +118,41 @@ def create_app():
                 uploaded_file.save(os.path.join(bas_dir,'files','emailbounces', filename))
             
 
-
-            return redirect(url_for('index'))
+            returnMessage = {'message':"File uploaded successfully"}
+            #return redirect(url_for('index'))
+            return returnMessage
 
         fileTypeList=['customerlist','htmlformat','emailbounces']
         return render_template('fileUpload.html',fileTypes=fileTypeList)
     
-   
+    @app.route('/viewFileList',methods=['GET','OPTIONS'])
+    def viewFileList():
+        if request.method == 'GET' or request.method == 'OPTIONS':
+            filetype = request.args.get('filetype')
+            filenames = []
+            
+
+            if filetype == 'customerlist':
+                file_directory = os.path.join(bas_dir,'files','customerlist')
+                filenames_no_key = os.listdir(file_directory)
+                filenames = [{"id":index,"filename":value} for index, value in enumerate(filenames_no_key)]
+                
+
+                
+            if filetype == 'htmlformat':
+                file_directory = os.path.join(bas_dir,'files','html')
+                filenames_no_key = os.listdir(file_directory)
+                filenames = [{"id":index,"filename":value} for index, value in enumerate(filenames_no_key)]
+                
+            if filetype == 'emailbounces':
+                file_directory = os.path.join(bas_dir,'files','emailbounces')
+                filenames_no_key = os.listdir(file_directory)
+                filenames = [{"id":index,"filename":value} for index, value in enumerate(filenames_no_key)]
+                
+            
+            return jsonify(filenames)
+
+
     
     @app.route('/inputFilesList')
     def inputFilesList():

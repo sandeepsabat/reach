@@ -17,7 +17,7 @@ bas_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 
-def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,sender_email,app_password,smtp_server,port):
+def sendEmail(recipient_email,subject_line,campaign_link,email_html_file,first_name,serial_no,sender_email,app_password,smtp_server,port):
     log_msg = ""
     
     #Read and extract the email body from html file and pass params to the email body
@@ -25,7 +25,8 @@ def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,
         html_content = file.read()
     
     #Pass params to the html file
-    html_content_with_params = html_content.format(first_name=first_name) 
+    
+    html_content_with_params = html_content.format(first_name=first_name,campaign_link=campaign_link)
     body = MIMEText(html_content_with_params,'html')
 
     # Create the email message by adding the sender address, recipient address, subject line,and the email body
@@ -50,8 +51,8 @@ def sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,
         return log_msg,disp_msg,sent_flag,sent_date_time
         
     except Exception as e:
-        log_msg = f"Error sending email:" + e
-        disp_msg = f"Failed to sent email to {first_name} at email:{recipient_email}. Error:" + e
+        log_msg = f"Error sending email:{e}"
+        disp_msg = f"Failed to sent email to {first_name} at email:{recipient_email}. Error:{e}"
         sent_flag = False
         sent_date_time = datetime.datetime.now()
         return log_msg,disp_msg,sent_flag,sent_date_time
@@ -106,8 +107,10 @@ def streamCampaign():
                     recipient_email = row['email'] 
                     first_name = row['firstName'] 
                     last_name= row['lastName']
-                    #log_msg = "Customer Details:" + first_name + " " + last_name + ",Email:" + recipient_email + ",Serial No:" + str(serial_no) + "Subject Line:" + subject_line
-                    log_msg,disp_msg,sent_flag,sent_date_time = sendEmail(recipient_email,subject_line,email_html_file,first_name,serial_no,senderEmail,password,smtpServer,port)
+                    # disp_msg = "Customer Details:" + first_name + " " + last_name + ",Email:" + recipient_email + ",Serial No:" + str(serial_no) + "Subject Line:" + subject_line
+                    campaign_link = url_for(f'campaigntracker.trackCampaign',_external=True,name=f'{campaign_name}',timestamp=datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
+                    
+                    log_msg,disp_msg,sent_flag,sent_date_time = sendEmail(recipient_email,subject_line,campaign_link,email_html_file,first_name,serial_no,senderEmail,password,smtpServer,port)
                     addEmailToCampaign(campaign_name,campaign_id,first_name,last_name,recipient_email,log_msg,sent_flag,sent_date_time)
                     yield f"data: {disp_msg}\n\n" #Sends message to the client html as server side events
                     
