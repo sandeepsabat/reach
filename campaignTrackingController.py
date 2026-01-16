@@ -60,7 +60,7 @@ def generateTrackableLink():
 def trackCampaign():
     campaignName = request.args.get('name')
     addEmailOpenEntryForCampaign(campaignName)
-    img = Image.new('RGB',(100,100),color='red')
+    img = Image.new('RGB',(1,1),color='red')
     img_byte_arr = io.BytesIO()
     img.save(img_byte_arr,format='PNG')
     img_byte_arr.seek(0)
