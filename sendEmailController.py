@@ -57,9 +57,27 @@ def sendEmail(recipient_email,subject_line,campaign_link,email_html_file,first_n
         sent_date_time = datetime.datetime.now()
         return log_msg,disp_msg,sent_flag,sent_date_time
 
-    
 
-@sendEmail_bp.route('/startCampaign',methods=['GET','POST'])
+
+@sendEmail_bp.route('/getCampaignInitiationData',methods=['GET']) 
+def getCampaignInitationData():
+        
+
+        
+        senderEmailList_wo_id = getSenderEmailList()
+        senderEmailList = [{'id':index,'value':value} for index,value in enumerate(senderEmailList_wo_id)]
+        cohortList_wo_id = getCustomerCohortList()
+        cohortList = [{'id':index,'value':value} for index,value in enumerate(cohortList_wo_id)]
+        emailTemplateList_wo_id = getEmailTemplateList()
+        emailTemplateList = [{'id':index,'value':value} for index,value in enumerate(emailTemplateList_wo_id)]
+
+        campaignInitiationDetails = {'senderEmailList':senderEmailList,'cohortList':cohortList,'emailTemplateList':emailTemplateList}
+
+        
+        return jsonify(campaignInitiationDetails)
+
+
+@sendEmail_bp.route('/startCampaign',methods=['GET','POST']) # To be removed when the front end is fully functional
 def startCampaign():
         if request.method == 'POST':
             cohortName = request.form.get('cohortname')
