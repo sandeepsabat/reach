@@ -41,7 +41,7 @@ def createCohort():
     
     return render_template('createCohort.html')
 
-@manageCustomer_bp.route('/addCustomerToCohort',methods=['GET','POST'])
+@manageCustomer_bp.route('/addCustomerToCohort',methods=['GET','POST']) # To be removed when front end is fully built
 def addCustomerToCohort():
     if request.method == 'POST':
             cohortName = request.form.get('cohortname')
@@ -54,6 +54,18 @@ def addCustomerToCohort():
     file_directory = os.path.join(bas_dir,'files','customerlist')
     filenames = os.listdir(file_directory)
     return render_template('customerCohortForm.html',cohortList=cohortlist,fileNames=filenames)
+
+@manageCustomer_bp.route('/getCustomerCohortMenu',methods=['GET']) 
+def getCustomerCohortMenu():
+    
+      
+    cohortlist_wo_id = getCustomerCohortList()
+    cohortlist = [{'id':item,'value':item} for item in cohortlist_wo_id]
+    file_directory = os.path.join(bas_dir,'files','customerlist')
+    custfilenames_wo_id = os.listdir(file_directory)
+    custfilenames = [{'id':item,'value':item} for item in custfilenames_wo_id]
+    cohortCustomerMenuDetails = {'cohortList':cohortlist,'custFileList':custfilenames}
+    return jsonify(cohortCustomerMenuDetails)
 
 @manageCustomer_bp.route('/custUploadStream')
 def custUploadStream():
