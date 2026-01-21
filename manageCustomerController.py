@@ -14,7 +14,21 @@ manageCustomer_bp = Blueprint("managecustomer",__name__)
 #Get the absolute path of teh directory containing the current script
 bas_dir = os.path.dirname(os.path.abspath(__file__))
 
-@manageCustomer_bp.route('/createCohort',methods=['GET','POST'])
+@manageCustomer_bp.route('/addCohort',methods=['POST'])
+def addCohort():
+    if request.method == 'POST':
+        inputData = request.get_json()
+        cohortName = inputData['cohortName']
+        description = inputData['description']
+        shortCode = inputData['shortCode']
+
+        return_message = createCustomerCohort(cohortName,description,shortCode)
+        return jsonify({'message':return_message})
+    return jsonify({'message':"accept application/json"})
+    
+    
+
+@manageCustomer_bp.route('/createCohort',methods=['GET','POST']) # To be removed when front end is fully built
 def createCohort():
     if request.method == 'POST':
             inputData = request.get_json()
