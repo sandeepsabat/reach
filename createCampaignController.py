@@ -34,5 +34,12 @@ def addEmailTemplate():
     fileNames = os.listdir(file_directory)
     return render_template('emailTemplateForm.html',fileNames=fileNames)
 
+@createCampaign_bp.route('/getFileNameForTemplates',methods=['GET'])
+def getFileNameForTemplates():
+    file_directory = os.path.join(bas_dir,'files','html')
+    fileNames_wo_id = os.listdir(file_directory)
+    fileNames = [{'id':item,'value':item} for item in fileNames_wo_id]
+    return jsonify(fileNames)
+
 
     
