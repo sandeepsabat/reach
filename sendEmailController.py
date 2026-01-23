@@ -173,25 +173,17 @@ def bounceStream():
         workbook = openpyxl.load_workbook(filename,data_only=True)
         sheet = workbook['Sheet1']
 
-        #From the input excel file extract the campaign name, the email html file name
-        campaign_name = sheet['B1'].value
-        html_file_name = sheet['B2'].value
         
-
-        #Create an entry for email campaign in database
-        campaign_id = createCampaigns(campaign_name,excel_file_name,html_file_name)
 
           
         def generate():
            
             try:
                 for row_cells in sheet.iter_rows(min_row=startrow,max_row=endrow):
-                    serial_no = row_cells[2].value
-                    recipient_email = row_cells[5].value
+                    recipient_email = row_cells[2].value
                     bounce_status = row_cells[8].value
-                    log_msg = f"Updated bounce status of email at slno {serial_no}"
-                    workbook.save(filename)
-                    updateEmailBounceStatus(campaign_name,campaign_id,recipient_email,bounce_status)
+                    log_msg = f"Updated bounce status of email@ {recipient_email}"
+                    updateEmailBounceStatus(recipient_email)
                     yield f"data: {log_msg}\n\n" #Sends message to the client html as server side events
                     
             finally:
