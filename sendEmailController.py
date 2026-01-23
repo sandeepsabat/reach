@@ -181,7 +181,6 @@ def bounceStream():
             try:
                 for row_cells in sheet.iter_rows(min_row=startrow,max_row=endrow):
                     recipient_email = row_cells[2].value
-                    bounce_status = row_cells[8].value
                     log_msg = f"Updated bounce status of email@ {recipient_email}"
                     updateEmailBounceStatus(recipient_email)
                     yield f"data: {log_msg}\n\n" #Sends message to the client html as server side events
