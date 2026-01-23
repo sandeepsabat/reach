@@ -98,6 +98,11 @@ def getCohortEmailList(cohortname):
             "path": "$customerDetails"
         }
      },
+     {"$match":{
+            
+            "customerDetails.isActive":True
+        }
+     },
     {"$project":{
             "_id": 0,
             "firstName": "$customerDetails.firstName",
