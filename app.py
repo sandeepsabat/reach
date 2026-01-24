@@ -14,7 +14,7 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app,resources={r"/*":{"origins":"http://localhost:5173","methods":["POST","OPTIONS","GET"],"allow_headers":["Content-Type","Authorization"]}})
+    CORS(app,resources={r"/*":{"origins":["http://localhost:5173","http://reach.ioosolutions.com"],"methods":["POST","OPTIONS","GET"],"allow_headers":["Content-Type","Authorization"]}})
     app.json.sort_keys = False # this prevents sorting of keys in jsonify and changing the order
   
 
