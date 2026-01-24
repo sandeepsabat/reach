@@ -142,7 +142,7 @@ def streamCampaign():
         
 
             
-@sendEmail_bp.route('/uploadEmailBounce',methods=['GET','POST'])
+@sendEmail_bp.route('/uploadEmailBounce',methods=['GET','POST']) # To be removed when front end is fully built
 def uploadEmailBounce():
         if request.method == 'POST':
             fileName = request.form.get('filenames')
@@ -154,6 +154,15 @@ def uploadEmailBounce():
 
         filenames = os.listdir(file_directory)
         return render_template('emailBounceForm.html',fileNames=filenames)    
+
+@sendEmail_bp.route('/getBounceEmailFileNames',methods=['GET'])
+def getBounceEmailFileNames():
+        file_directory = os.path.join(bas_dir,'files','emailbounces')
+
+        fileNames_wo_id = os.listdir(file_directory)
+        fileNames = [{'id':item,'value':item} for item in fileNames_wo_id]
+        return jsonify(fileNames)
+        
 
 
 @sendEmail_bp.route('/bounceStream')

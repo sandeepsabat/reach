@@ -61,7 +61,7 @@ def mapCustomerToCohort(cohortname,customer_id,serial_no):
         return return_message
     
 def addCustomer(first_name,last_name,customer_email,organization_name):
-    data_record = {"firstName":first_name,"lastName":last_name,"customerEmail":customer_email,"organizationName":organization_name}
+    data_record = {"firstName":first_name,"lastName":last_name,"customerEmail":customer_email,"organizationName":organization_name,"isActive":True,"deactivationReason":None}
     db = client['reach']
     collection = db['customer']
     find_query = {"customerEmail":customer_email}
