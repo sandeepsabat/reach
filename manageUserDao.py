@@ -15,5 +15,4 @@ def getUserList():
     collection = db['users']
     projection = {"_id":1,"name":1,"email":1,"role":1,"created_at":1,"updated_at":1}
     userList = list(collection.find({},projection))
-    print (userList)
     return userList

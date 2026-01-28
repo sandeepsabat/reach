@@ -16,5 +16,18 @@ bas_dir = os.path.dirname(os.path.abspath(__file__))
 def getUsers():
 
     users = getUserList()
-    user_json = json_util.dumps(users)
-    return jsonify(user_json)
+    userJSONList =[]
+
+    for index, value in enumerate(users):
+        item = {
+            'id':index+1,
+            'name':value['name'],
+            'email':value['email'],
+            'role':value['role'],
+            'created_at':value['created_at'].strftime('%d-%m-%Y %H:%M:%S'),
+            'updated_at':value['updated_at'].strftime('%d-%m-%Y %H:%M:%S')
+        }
+        userJSONList.append(item)
+
+    
+    return jsonify(userJSONList)
