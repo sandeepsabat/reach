@@ -43,7 +43,6 @@ def register():
 
 
 @auth_bp.route("/login", methods=["POST"])
-@cross_origin(origins="http://localhost:5173",methods=['POST'])
 def login():
     db = current_app.db
     try:
@@ -146,3 +145,6 @@ def update_user():
     user = db.users.find_one({"_id": uid})
 
     return jsonify({"msg": "Updated", "user": to_jsonable(user, exclude=["password_hash"])}), 200
+
+
+

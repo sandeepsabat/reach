@@ -206,7 +206,6 @@ def create_app():
         return render_template("fileList.html",files=filenames,header='Uploaded Email Bounce Files')
     
     @app.route('/addSenderEmailCredentials',methods=['GET','POST'])
-    @cross_origin(origins="http://localhost:5173",methods=['GET','POST'])
     def addSenderEmailCredentials():
         if request.method == 'POST':
             inputData = request.get_json()
@@ -233,6 +232,9 @@ def create_app():
 
     from manageCustomerController import manageCustomer_bp
     app.register_blueprint(manageCustomer_bp,url_prefix='/customer')
+
+    from manageUserController import manageUser_bp
+    app.register_blueprint(manageUser_bp,url_prefix='/user')
     
 
     return app
